@@ -2,13 +2,14 @@ package com.skeeter144.script;
 
 import java.awt.Graphics2D;
 
+import org.osbot.rs07.api.Inventory;
 import org.osbot.rs07.api.model.Player;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.utility.Logger;
 
 public abstract class SkeeterScript{
 
-	protected long lastAnimationTime = 0;
+	private long lastAnimationTime = 0;
 	protected State lastState = State.IDLE;
 	protected State currentState = State.IDLE;
 	protected Action currentAction = Action.NONE;
@@ -18,11 +19,13 @@ public abstract class SkeeterScript{
 	public String name = "SkeeterScript";
 	
 	protected Player player;
+	protected Inventory inv;
 	
 	public SkeeterScript(MethodProvider m) {
 		script = m;
     	logger = Logger.GLOBAL_LOGGER;
-    	
+    	player = script.myPlayer();
+    	inv = script.getInventory();
 	}
 	
 	@SuppressWarnings("unused")
@@ -31,10 +34,8 @@ public abstract class SkeeterScript{
 	public void onStart() {
 		Thread t = new Thread(() -> {
 			while(running) {
-				
-				
-				
-				
+				if(player.isMoving() || player.isAnimating()) lastAnimationTime = System.currentTimeMillis();
+
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
