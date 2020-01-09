@@ -1,66 +1,72 @@
 package com.skeeter144.script;
 
 import java.awt.Graphics2D;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.osbot.rs07.api.ui.Skill;
-import org.osbot.rs07.script.Script;
+import org.osbot.rs07.api.model.Player;
+import org.osbot.rs07.script.MethodProvider;
+import org.osbot.utility.Logger;
 
-import com.skeeter144.misc.Formatting;
+public abstract class SkeeterScript{
 
-public abstract class SkeeterScript extends Script{
-
+	protected long lastAnimationTime = 0;
 	protected State lastState = State.IDLE;
-	protected Action nextAction = Action.NONE;
-	public abstract State getState();
-	protected long startTime = 0;
+	protected State currentState = State.IDLE;
+	protected Action currentAction = Action.NONE;
+	protected MethodProvider script;
+	protected Logger logger;
+	public boolean running = false;
+	public String name = "SkeeterScript";
 	
-	protected boolean showStats = true;
+	protected Player player;
 	
-	protected Map<Skill, Integer> xpEarned = new HashMap<Skill, Integer>();
-	long lastXpUpdate = -1;
-	
-	@Override
-	public void onStart() throws InterruptedException {
-		super.onStart();
-		startTime = System.currentTimeMillis();
+	public SkeeterScript(MethodProvider m) {
+		script = m;
+    	logger = Logger.GLOBAL_LOGGER;
+    	
 	}
 	
-	@Override
-	public void onPaint(Graphics2D g) {
-		super.onPaint(g);
-		
-		if(System.currentTimeMillis() - lastXpUpdate > 1000) updateXpEarned();
-		
-		if(showStats) {
-			g.drawString(runningTimeFormatted(), 1, 1);
-			
-			int line = 0;
-			for(Map.Entry<Skill, Integer> entry : xpEarned.entrySet()) {
-				if(entry.getValue() > 0) {
-					g.drawString(entry.getKey().name() + "XP: " + entry.getValue(), 1, 10 * line);
-					++line;
+	@SuppressWarnings("unused")
+	private SkeeterScript() {}
+	
+	public void onStart() {
+		Thread t = new Thread(() -> {
+			while(running) {
+				
+				
+				
+				
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
-		}
+		});
+		t.start();
 	}
 	
-	protected void updateXpEarned() {
-		Skill[] skills = Skill.values();
-		for(Skill s : skills)
-			xpEarned.put(s, experienceTracker.getGainedXP(s));
+	public void onPaint(Graphics2D g) {}
+	
+	public long idleTime() {
+		return System.currentTimeMillis() - lastAnimationTime;
 	}
 	
-	public long runningTime() {
-		return System.currentTimeMillis() - startTime;
-	}
-	
-	public String runningTimeFormatted() {
-		return Formatting.msToReadable(runningTime());
-	}
-	
+	public abstract int onLoop() throws InterruptedException;
+	public abstract State getState();
 	public abstract Action nextAction();
+	
+	public int random(int min, int max) {
+		return MethodProvider.random(min, max);
+	}
+	
+	public void sleep(int millis) throws InterruptedException {
+		MethodProvider.sleep(millis);
+	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
 	
 	public enum State{
 		IDLE,

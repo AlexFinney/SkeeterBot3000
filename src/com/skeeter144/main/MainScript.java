@@ -1,193 +1,140 @@
 package com.skeeter144.main;
 
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.osbot.rs07.api.Inventory;
-import org.osbot.rs07.api.model.NPC;
-import org.osbot.rs07.api.model.Player;
-import org.osbot.rs07.api.model.RS2Object;
-import org.osbot.rs07.api.ui.RS2Widget;
+import org.osbot.rs07.api.ui.Skill;
+import org.osbot.rs07.input.keyboard.BotKeyListener;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 
-import com.skeeter144.filter.SBUFilters;
-import com.skeeter144.id.InventoryIds;
-import com.skeeter144.id.NpcIds;
-import com.skeeter144.id.SBUIds;
+import com.skeeter144.gui.MainScreen;
 import com.skeeter144.misc.Formatting;
-import com.skeeter144.script.SkeeterScript.Action;
+import com.skeeter144.script.GenericKilllerScript;
+import com.skeeter144.script.SkeeterFisher;
+import com.skeeter144.script.SkeeterScript;
 import com.skeeter144.script.SkeeterScript.State;
-import com.skeeter144.sleep.Sleep;
 
-@ScriptManifest(name = "GenericFisher", author = "TheGreatBabushka", version = 1.0, info = "", logo = "")
+@ScriptManifest(name = "SkeeterBot3000", author = "Skeeter144", version = 1.0, info = "The bestest bot there ever was.", logo = "")
 public class MainScript extends Script{
 	
-	long lastAnimationTime = 0;
-	Action lastAction;
-	Action currentAction;
+	long startTime = 0;
+	public ArrayList<SkeeterScript> scripts = new ArrayList<SkeeterScript>();
+	
+	SkeeterScript activeScript;
+	SkeeterScript nextScript;
+	
+	public boolean running = false;
+    public boolean ironManMode = false;
+	public String status;
+
+	long lastXpUpdate = -1;
+	boolean showStats = true;
+	
+	Map<Skill, Integer> xpEarned = new HashMap<Skill, Integer>();
+	
+	MainScreen mainMenu;
+	
+	public void startScript() {
+		running = true;
+	}
+	
+	public void pauseScript() {
+		running = false;
+	}
+	
+	public void stopScript() {
+		running = false;
+	}
 	
 	@Override
 	public void onStart() throws InterruptedException {
 		super.onStart();
-		this.getBot().addMessageListener(this);
 		
-		final MainScript script = this;
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				while(true) {
-					Player p = script.myPlayer();
-					if(p != null && (p.isMoving() || p.isAnimating())) {
-						lastAnimationTime = System.currentTimeMillis();
-					}
-					
-					try {
-						Thread.sleep(50);
-					} catch (InterruptedException e) {}
-				}
+		instance = this;
+		
+		experienceTracker.startAll();
+		
+		getBot().addMessageListener(this);
+		getBot().addKeyListener(new BotKeyListener() {
+			@Override
+			public void checkKeyEvent(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_CONTROL) mainMenu.setVisible(!mainMenu.isVisible());
 			}
 		});
-		t.start();
+		
+		scripts.add(new GenericKilllerScript(this));
+		scripts.add(new SkeeterFisher(this));
+		
+		mainMenu = new MainScreen(this);
+		mainMenu.setVisible(true);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public int onLoop() throws InterruptedException {
-		Player p = myPlayer();
-		Inventory i = getInventory();
+		if(!running || activeScript == null) return 50;
+		if(startTime == 0) startTime = System.currentTimeMillis();
 		
-		if(p.isAnimating() || p.isMoving()) {
-			lastAnimationTime = System.currentTimeMillis();
-		}
-		
-		Action temp = nextAction();
-		lastAction = currentAction;
-		currentAction = temp;
-
-		if(lastAction != currentAction)
-			logger.debug("Executing Action: " + currentAction);
-
-		switch (currentAction) {
-			case FISH_SPOT:
-				fish(FishingType.FLY);
-				break;
-			case CHOP_TREE:
-				RS2Object tree = objects.closest(SBUIds.PLAIN_WOOD_TREES);
-				if(tree != null) {
-					if(i.isFull())
-						i.interact(27, "Drop");
-					
-					tree.interact("Chop down");
-				}
-				break;
-			case LIGHT_FIRE:
-				if(i.contains("Tinderbox")) {
-					if(i.isItemSelected())
-						i.deselectItem();
-					
-					i.interact(i.getSlot("Tinderbox"), "Use");
-					sleep(random(100, 500));
-					i.interact("Use", "Logs");
-				}
-				break;
-			case COOK_FOOD:
-				RS2Widget cookWindow = getWidgets().get(270, 14);
-				if(cookWindow != null && cookWindow.isVisible()) {
-					cookWindow.interact("Cook All");
-					Sleep.sleepUntil(() -> idleTime() > 3 || !i.contains(SBUFilters.UNCOOKED_FISH), 30000);
-				}
-				
-				RS2Object fire = objects.closest("Fire");
-				if(fire != null && fire.getPosition().distance(myPosition()) < 5) {
-					i.interact(i.getSlot(SBUFilters.UNCOOKED_FISH), "Use");
-					sleep(random(100, 500));
-					fire.interact();
-				}
-			default:
-				break;
-		}
-		
-		return 2000;
+		return activeScript.onLoop();
 	}
 	
-	void fish(FishingType type) {
-		int fishingSpotId = 0;
-		if(type == FishingType.SMALL_NET) fishingSpotId = NpcIds.NET_FISHING_SPOT;
-		else if(type == FishingType.FLY) fishingSpotId = NpcIds.ROD_FISHING_SPOT;
-		
-		NPC fishingSpot = getNpcs().closest(fishingSpotId);
-		if(fishingSpot != null) {
-			if(type == FishingType.SMALL_NET && fishingSpot.hasAction("Small Net"))
-				fishingSpot.interact("Small Net");
-			
-			if(type == FishingType.BIG_NET && fishingSpot.hasAction("Net"))
-				fishingSpot.interact("Net");
-			
-			if(type == FishingType.FLY && fishingSpot.hasAction("Lure"))
-				fishingSpot.interact("Lure");
-			
-			if(type == FishingType.BAIT && fishingSpot.hasAction("Bait"))
-				fishingSpot.interact("Bait");
-			
-			if(type == FishingType.HARPOON && fishingSpot.hasAction("Harpoon"))
-				fishingSpot.interact("Harpoon");
-			
-			Sleep.sleepUntil(() -> myPlayer().getAnimation() == 623, 10000);
-		}
-	}
-	
-	void dropFish() {
-		Inventory inv = getInventory();
-		logger.debug("Dropping fish");
-		inv.dropAll(InventoryIds.BURNT_SHRIMP, InventoryIds.COOKED_SHRIMP, InventoryIds.RAW_SHRIMP);
-		logger.debug("all fish dropped");
-	}
+	final int BASE_DRAW_HEIGHT = 40;
+	final int LINE_HEIGHT = 8;
 	
 	@Override
 	public void onPaint(Graphics2D g) {
 		super.onPaint(g);
 		
-		g.drawString("Idle: " + Formatting.msToReadable(idleTime()), 1, 40);
-		g.drawString("Previous Action: " + lastAction, 1, 60);
-		g.drawString("Current Action: " + currentAction, 1, 80);
+		if(!running || activeScript == null) return;
+		
+		if(System.currentTimeMillis() - lastXpUpdate > 250) updateXpEarned();
+		
+		if(showStats) {
+			g.drawString(runningTimeFormatted(),                         1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 1);
+			g.drawString("Previous Action: " + activeScript.getState(),               1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 3);
+			g.drawString("Current Action:  " + activeScript.nextAction(),             1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 4);
+			
+			int line = 6;
+			for(Map.Entry<Skill, Integer> entry : xpEarned.entrySet()) {
+				if(entry.getValue() > 0) {
+					g.drawString(entry.getKey().name() + "XP: " + entry.getValue(), 1, BASE_DRAW_HEIGHT +  LINE_HEIGHT * line);
+					++line;
+				}
+			}
+
+			activeScript.onPaint(g);
+		}
 	}
 	
 	public State getState() {
 		return State.IDLE;
 	}
-
-	@SuppressWarnings("unchecked")
-	public Action nextAction() {
-		Player p = myPlayer();
-		Inventory i = getInventory();
+	
+	protected void updateXpEarned() {
+		Skill[] skills = Skill.values();
+		for(Skill s : skills)
+			xpEarned.put(s, experienceTracker.getGainedXP(s));
 		
-		if(i.isFull()) {
-			if(i.contains(SBUFilters.LOG_FILTER)) {
-				return Action.LIGHT_FIRE;
-			}else {
-				return Action.CHOP_TREE;
-			}
-		}
-		
-		if(i.isFull() || i.getEmptySlots() == 1) {
-			if(objects.closest("Fire") != null) return Action.COOK_FOOD;
-		}
-		
-		if(p.isAnimating() || p.isMoving() || idleTime() < 2) return Action.WAIT;
-		
-		return Action.FISH_SPOT;
+		lastXpUpdate = System.currentTimeMillis();
 	}
 	
-	public long idleTime() {
-		return System.currentTimeMillis() - lastAnimationTime;
+	public long runningTime() {
+		return System.currentTimeMillis() - startTime;
 	}
 	
-	enum FishingType{
-		SMALL_NET,
-		BIG_NET,
-		BAIT,
-		FLY,
-		HARPOON,
-		CAGE
+	public String runningTimeFormatted() {
+		return Formatting.msToReadable(runningTime());
 	}
+	
+	
+	static MainScript instance;
+	public static MainScript instance() {
+		return instance;
+	}
+	
+	
 	
 }
