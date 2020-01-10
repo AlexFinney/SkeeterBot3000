@@ -37,7 +37,7 @@ public class MainScreen extends JFrame{
 		startBtn = new JButton("Start");
 		startBtn.setBounds(10, 11, 116, 23);
 		getContentPane().add(startBtn);
-		startBtn.addActionListener((e) -> { mainScript.startScript(); }); 
+		startBtn.addActionListener((e) -> { mainScript.startScript((SkeeterScript) scriptsCb.getSelectedItem()); }); 
 		
 		pauseBtn = new JButton("Pause");
 		pauseBtn.setBounds(10, 11, 116, 23);

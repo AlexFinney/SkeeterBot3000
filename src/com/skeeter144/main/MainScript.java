@@ -13,12 +13,12 @@ import org.osbot.rs07.script.ScriptManifest;
 
 import com.skeeter144.gui.MainScreen;
 import com.skeeter144.misc.Formatting;
-import com.skeeter144.script.GenericKilllerScript;
-import com.skeeter144.script.SkeeterFisher;
+import com.skeeter144.script.SBFisher;
+import com.skeeter144.script.SBKiller;
 import com.skeeter144.script.SkeeterScript;
 import com.skeeter144.script.SkeeterScript.State;
 
-@ScriptManifest(name = "SkeeterBot3000", author = "Skeeter144", version = 1.0, info = "The bestest bot there ever was.", logo = "")
+@ScriptManifest(name = "SkeeterBot3000", author = "Skeeter144", version = 1.0, info = "The bestest bot there ever was. Skynet's great-grandaddy.", logo = "")
 public class MainScript extends Script{
 	
 	long startTime = 0;
@@ -38,8 +38,9 @@ public class MainScript extends Script{
 	
 	MainScreen mainMenu;
 	
-	public void startScript() {
+	public void startScript(SkeeterScript script) {
 		running = true;
+		activeScript = script;
 	}
 	
 	public void pauseScript() {
@@ -49,6 +50,7 @@ public class MainScript extends Script{
 	public void stopScript() {
 		running = false;
 	}
+	
 	
 	@Override
 	public void onStart() throws InterruptedException {
@@ -66,11 +68,17 @@ public class MainScript extends Script{
 			}
 		});
 		
-		scripts.add(new GenericKilllerScript(this));
-		scripts.add(new SkeeterFisher(this));
+		scripts.add(new SBKiller(this));
+		scripts.add(new SBFisher(this));
 		
 		mainMenu = new MainScreen(this);
 		mainMenu.setVisible(true);
+	}
+	
+	@Override
+	public void onExit() throws InterruptedException {
+		super.onExit();
+		mainMenu.setVisible(false);
 	}
 	
 	@Override
@@ -93,9 +101,9 @@ public class MainScript extends Script{
 		if(System.currentTimeMillis() - lastXpUpdate > 250) updateXpEarned();
 		
 		if(showStats) {
-			g.drawString(runningTimeFormatted(),                         1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 1);
-			g.drawString("Previous Action: " + activeScript.getState(),               1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 3);
-			g.drawString("Current Action:  " + activeScript.nextAction(),             1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 4);
+			g.drawString(runningTimeFormatted(),                           1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 1);
+			g.drawString("Previous Action: " + activeScript.getState(),    1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 3);
+			g.drawString("Current Action:  " + activeScript.nextAction(),  1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 4);
 			
 			int line = 6;
 			for(Map.Entry<Skill, Integer> entry : xpEarned.entrySet()) {
