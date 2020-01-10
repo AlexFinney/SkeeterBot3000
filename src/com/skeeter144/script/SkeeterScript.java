@@ -3,6 +3,7 @@ package com.skeeter144.script;
 import java.awt.Graphics2D;
 
 import org.osbot.rs07.api.Inventory;
+import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.model.Player;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.utility.Logger;
@@ -67,6 +68,10 @@ public abstract class SkeeterScript{
 	@Override
 	public String toString() {
 		return name;
+	}
+	
+	public MethodProvider getMethodProvider() {
+		return script;
 	}
 	
 	public enum State{

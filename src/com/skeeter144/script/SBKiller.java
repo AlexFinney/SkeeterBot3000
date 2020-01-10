@@ -19,18 +19,21 @@ import org.osbot.rs07.input.keyboard.BotKeyListener;
 import org.osbot.rs07.listener.MessageListener;
 import org.osbot.rs07.script.MethodProvider;
 
-import com.skeeter144.gui.ConfigurationGui;
+import com.skeeter144.gui.SBKillerGui;
 import com.skeeter144.main.MainScript;
 import com.skeeter144.sleep.Sleep;
+import com.skeeter144.util.Util;
 
 public class SBKiller extends SkeeterScript implements MessageListener {
 
 	public SBKiller(MethodProvider m) {
 		super(m);
 		name = "Skeeter's Killer + Loot 'n Bones"; 
+		
+		Util.loadMonsterDrops();
 	}
 
-	ConfigurationGui gui;
+	SBKillerGui gui;
 	
 	public boolean running = false;
     public boolean buryBones = false;
@@ -52,7 +55,7 @@ public class SBKiller extends SkeeterScript implements MessageListener {
 			}
 		});
     	
-    	gui = new ConfigurationGui(this);
+    	gui = new SBKillerGui(this);
     	gui.setVisible(true);
     }
 
@@ -68,8 +71,6 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     public int onLoop() {
     	if(!isRunning()) return 1000;
     	
-    	int dist = Integer.MAX_VALUE;
-    	Entity closest = null;
     	Player player = script.myPlayer();
     	Inventory inventory = script.inventory;
     	

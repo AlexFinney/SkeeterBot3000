@@ -3,7 +3,10 @@ package com.skeeter144.main;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.osbot.rs07.api.ui.Skill;
@@ -41,6 +44,8 @@ public class MainScript extends Script{
 	public void startScript(SkeeterScript script) {
 		running = true;
 		activeScript = script;
+		mainMenu.setVisible(false);
+		script.onStart();
 	}
 	
 	public void pauseScript() {
@@ -78,7 +83,8 @@ public class MainScript extends Script{
 	@Override
 	public void onExit() throws InterruptedException {
 		super.onExit();
-		mainMenu.setVisible(false);
+		
+		if(mainMenu != null) mainMenu.setVisible(false);
 	}
 	
 	@Override
@@ -90,7 +96,7 @@ public class MainScript extends Script{
 	}
 	
 	final int BASE_DRAW_HEIGHT = 40;
-	final int LINE_HEIGHT = 8;
+	final int LINE_HEIGHT = 15;
 	
 	@Override
 	public void onPaint(Graphics2D g) {
@@ -105,12 +111,22 @@ public class MainScript extends Script{
 			g.drawString("Previous Action: " + activeScript.getState(),    1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 3);
 			g.drawString("Current Action:  " + activeScript.nextAction(),  1, BASE_DRAW_HEIGHT + LINE_HEIGHT * 4);
 			
-			int line = 6;
-			for(Map.Entry<Skill, Integer> entry : xpEarned.entrySet()) {
-				if(entry.getValue() > 0) {
-					g.drawString(entry.getKey().name() + "XP: " + entry.getValue(), 1, BASE_DRAW_HEIGHT +  LINE_HEIGHT * line);
-					++line;
+			List<Skill> skillsSorted = new ArrayList<Skill>();
+			xpEarned.keySet().forEach(skill -> { 
+				if(xpEarned.get(skill) > 0) 
+					skillsSorted.add(skill);
+			});
+			
+			Collections.sort(skillsSorted, new Comparator<Skill>() {
+				public int compare(Skill o1, Skill o2) {
+					return o1.name().compareToIgnoreCase(o2.name());
 				}
+			});
+			
+			int line = 6;
+			for(Skill skill : skillsSorted) {
+				g.drawString(skill.name() + " XP: " + xpEarned.get(skill), 1, BASE_DRAW_HEIGHT +  LINE_HEIGHT * line);
+				++line;
 			}
 
 			activeScript.onPaint(g);
