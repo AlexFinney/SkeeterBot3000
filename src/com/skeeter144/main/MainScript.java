@@ -20,9 +20,19 @@ import com.skeeter144.script.SBFisher;
 import com.skeeter144.script.SBKiller;
 import com.skeeter144.script.SkeeterScript;
 import com.skeeter144.script.SkeeterScript.State;
+import com.skeeter144.util.Util;
 
 @ScriptManifest(name = "SkeeterBot3000", author = "Skeeter144", version = 1.0, info = "The bestest bot there ever was. Skynet's great-grandaddy.", logo = "")
 public class MainScript extends Script{
+	
+	public boolean filesDownloaded = false;
+	public MainScript() {
+		super();
+		Thread downloadThread = new Thread(() -> {
+			Util.loadMonsterDrops(() -> { filesDownloaded = true; });
+		});
+		downloadThread.start();
+	}
 	
 	long startTime = 0;
 	public ArrayList<SkeeterScript> scripts = new ArrayList<SkeeterScript>();

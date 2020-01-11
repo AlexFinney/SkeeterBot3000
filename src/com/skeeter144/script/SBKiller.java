@@ -30,9 +30,9 @@ public class SBKiller extends SkeeterScript implements MessageListener {
 		super(m);
 		name = "Skeeter's Killer + Loot 'n Bones"; 
 		
-		Util.loadMonsterDrops();
+		
 	}
-
+	
 	SBKillerGui gui;
 	
 	public boolean running = false;

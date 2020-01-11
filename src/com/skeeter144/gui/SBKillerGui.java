@@ -33,7 +33,7 @@ public class SBKillerGui extends JFrame{
 	String searchText = "";
 	
 	public SBKillerGui(SBKiller script) {
-		this.setSize(518, 351);
+		this.setSize(723, 357);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		this.script = script;
@@ -84,7 +84,7 @@ public class SBKillerGui extends JFrame{
 		getContentPane().add(startBtn);
 		
 		monsterListCb = new JComboBox<String>();
-		monsterListCb.setBounds(286, 17, 162, 20);
+		monsterListCb.setBounds(288, 17, 254, 20);
 		getContentPane().add(monsterListCb);
 		monsterListCb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -104,7 +104,7 @@ public class SBKillerGui extends JFrame{
 	void updateMonsterCb() {
 		script.getMethodProvider().npcs.getAll().forEach(
 				item -> {
-					if(item.isAttackable() && !monsterNames.contains(item.getName())) { 
+					if(item.getName() != null && item.isAttackable() && !monsterNames.contains(item.getName())) { 
 						monsterNames.add(item.getName());
 					}
 				});
