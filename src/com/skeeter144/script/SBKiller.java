@@ -22,18 +22,13 @@ import org.osbot.rs07.script.MethodProvider;
 import com.skeeter144.gui.SBKillerGui;
 import com.skeeter144.main.MainScript;
 import com.skeeter144.sleep.Sleep;
-import com.skeeter144.util.Util;
 
 public class SBKiller extends SkeeterScript implements MessageListener {
 
 	public SBKiller(MethodProvider m) {
 		super(m);
 		name = "Skeeter's Killer + Loot 'n Bones"; 
-		
-		
 	}
-	
-	SBKillerGui gui;
 	
 	public boolean running = false;
     public boolean buryBones = false;

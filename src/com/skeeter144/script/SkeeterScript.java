@@ -2,8 +2,9 @@ package com.skeeter144.script;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JFrame;
+
 import org.osbot.rs07.api.Inventory;
-import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.model.Player;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.utility.Logger;
@@ -21,6 +22,8 @@ public abstract class SkeeterScript{
 	
 	protected Player player;
 	protected Inventory inv;
+	
+	public JFrame gui;
 	
 	public SkeeterScript(MethodProvider m) {
 		script = m;
@@ -72,6 +75,10 @@ public abstract class SkeeterScript{
 	
 	public MethodProvider getMethodProvider() {
 		return script;
+	}
+	
+	public void setGuiVisible(boolean visible) {
+		if(gui != null) gui.setVisible(visible);
 	}
 	
 	public enum State{

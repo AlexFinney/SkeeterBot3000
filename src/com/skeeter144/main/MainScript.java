@@ -14,6 +14,7 @@ import org.osbot.rs07.input.keyboard.BotKeyListener;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 
+import com.skeeter144.data.MonsterData;
 import com.skeeter144.gui.MainScreen;
 import com.skeeter144.misc.Formatting;
 import com.skeeter144.script.SBFisher;
@@ -26,19 +27,11 @@ import com.skeeter144.util.Util;
 public class MainScript extends Script{
 	
 	public boolean filesDownloaded = false;
-	public MainScript() {
-		super();
-		Thread downloadThread = new Thread(() -> {
-			Util.loadMonsterDrops(() -> { filesDownloaded = true; });
-		});
-		downloadThread.start();
-	}
 	
 	long startTime = 0;
 	public ArrayList<SkeeterScript> scripts = new ArrayList<SkeeterScript>();
 	
 	SkeeterScript activeScript;
-	SkeeterScript nextScript;
 	
 	public boolean running = false;
     public boolean ironManMode = false;
@@ -50,6 +43,20 @@ public class MainScript extends Script{
 	Map<Skill, Integer> xpEarned = new HashMap<Skill, Integer>();
 	
 	MainScreen mainMenu;
+	
+	public MainScript() {
+		super();
+		Thread downloadThread = new Thread(() -> {
+			MonsterData.loadMonsterDrops(null);
+		});
+		downloadThread.start();
+		
+		Thread fileMoverThread = new Thread(() -> {
+			Util.copyResourcesToDataDir();
+		});
+		fileMoverThread.start();
+	}
+	
 	
 	public void startScript(SkeeterScript script) {
 		running = true;
@@ -79,7 +86,10 @@ public class MainScript extends Script{
 		getBot().addKeyListener(new BotKeyListener() {
 			@Override
 			public void checkKeyEvent(KeyEvent e) {
-				if(e.getKeyCode() == KeyEvent.VK_CONTROL) mainMenu.setVisible(!mainMenu.isVisible());
+				if(e.getKeyCode() == KeyEvent.VK_CONTROL) {
+					if(activeScript == null) mainMenu.setVisible(!mainMenu.isVisible());
+					else if(activeScript.gui != null) activeScript.gui.setVisible(!activeScript.gui.isVisible());
+				}
 			}
 		});
 		
@@ -163,12 +173,12 @@ public class MainScript extends Script{
 		return Formatting.msToReadable(runningTime());
 	}
 	
+	public void showMainMenu() {
+		mainMenu.setVisible(true);
+	}
 	
 	static MainScript instance;
 	public static MainScript instance() {
 		return instance;
 	}
-	
-	
-	
 }
