@@ -22,6 +22,8 @@ public class SBFisher extends SkeeterScript {
 	@SuppressWarnings("unchecked")
 	@Override
 	public int onLoop() throws InterruptedException {
+		Inventory inv = script.getInventory();
+		
 		currentAction = nextAction();
 
 		switch (currentAction) {

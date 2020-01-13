@@ -120,6 +120,8 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     }
     
     private int buryBones() {
+    	Inventory inv = script.getInventory();
+    	
     	if(inv.isFull() && inv.contains("Bones")) {
     		buryingBones = true;
     	}

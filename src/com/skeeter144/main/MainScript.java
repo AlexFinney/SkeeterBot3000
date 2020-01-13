@@ -20,6 +20,7 @@ import org.osbot.rs07.script.ScriptManifest;
 import com.skeeter144.data.MonsterData;
 import com.skeeter144.gui.MainScreen;
 import com.skeeter144.misc.Formatting;
+import com.skeeter144.script.SBCooker_AlKharid;
 import com.skeeter144.script.SBFisher;
 import com.skeeter144.script.SBKiller;
 import com.skeeter144.script.SBPizzaBaser;
@@ -80,7 +81,7 @@ public class MainScript extends Script{
 						}
 					}
 					
-					if(mouseTrail.size() > 0 && System.currentTimeMillis() - 50 > lastRemoveTime) {
+					if(mouseTrail.size() > 0 && System.currentTimeMillis() - 20 > lastRemoveTime) {
 						synchronized(mouseTrail) {
 							mouseTrail.remove(0);
 						}
@@ -133,6 +134,7 @@ public class MainScript extends Script{
 		scripts.add(new SBKiller(this));
 		scripts.add(new SBFisher(this));
 		scripts.add(new SBPizzaBaser(this));
+		scripts.add(new SBCooker_AlKharid(this));
 		
 		mainMenu = new MainScreen(this);
 		mainMenu.setVisible(true);
@@ -165,7 +167,9 @@ public class MainScript extends Script{
 		if(System.currentTimeMillis() - lastXpUpdate > 250) updateXpEarned();
 		
 		synchronized(mouseTrail) {
+			g.setColor(Color.RED);
 			for(int i = 0; i < mouseTrail.size() - 1; ++i) {
+				g.setColor(new Color(1, 0, 0, (((float)i) / mouseTrail.size())));
 				g.drawLine((int)mouseTrail.get(i).getX(), (int)mouseTrail.get(i).getY(), 
 						(int)mouseTrail.get(i+1).getX(), (int)mouseTrail.get(i+1).getY());
 			}
