@@ -26,8 +26,7 @@ import com.skeeter144.sleep.Sleep;
 public class SBKiller extends SkeeterScript implements MessageListener {
 
 	public SBKiller(MethodProvider m) {
-		super(m);
-		name = "Skeeter's Killer + Loot 'n Bones"; 
+		super("Skeeter's Killer + Loot 'n Bones", m);
 	}
 	
 	public boolean running = false;
@@ -128,7 +127,7 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     	if(buryingBones && buryBones) {
     		if(inv.contains("Bones")) {
     			inv.interact("Bury", "Bones");
-    			return random(900, 1200);
+    			return random(1100, 1400);
     		}else {
     			buryingBones = false;
     		}
@@ -144,6 +143,10 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     
     public void setTargetItems(String str) {
     	targetItems = Arrays.asList(str.split(" "));
+    }
+    
+    public void setTargetItems(List<String> str) {
+    	targetItems = str;
     }
 
 	public boolean isRunning() {

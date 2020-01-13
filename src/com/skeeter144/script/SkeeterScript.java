@@ -18,18 +18,19 @@ public abstract class SkeeterScript{
 	protected MethodProvider script;
 	protected Logger logger;
 	public boolean running = false;
-	public String name = "SkeeterScript";
+	public String name;
 	
 	protected Player player;
 	protected Inventory inv;
 	
 	public JFrame gui;
 	
-	public SkeeterScript(MethodProvider m) {
+	public SkeeterScript(String name, MethodProvider m) {
 		script = m;
     	logger = Logger.GLOBAL_LOGGER;
     	player = script.myPlayer();
     	inv = script.getInventory();
+    	this.name = name;
 	}
 	
 	@SuppressWarnings("unused")
@@ -109,7 +110,14 @@ public abstract class SkeeterScript{
 		PICK_UP_ITEMS,
 		CHOP_TREE,
 		FISH_SPOT,
+		ASSEMBLE_ITEMS,
 		BANK_ITEMS,
-		COOK_FOOD
+		TAKE_ITEMS_FROM_BANK,
+		OPEN_BANK,
+		COOK_FOOD,
+		BUY_ITEMS,
+		SELL_ITEMS,
+		MAKE_TOMATO_PIZZAS,
+		MAKE_CHEESE_PIZZAS
 	}
 }

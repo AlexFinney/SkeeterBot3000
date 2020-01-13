@@ -5,6 +5,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
+
+import org.osbot.utility.Logger;
+
+import com.skeeter144.main.MainScript;
 
 public class Util {
 
@@ -47,5 +52,18 @@ public class Util {
 	        file = new File(url.getPath());
 	    }
 	    return file;
+	}
+	
+	static ArrayList<String> queuedMsgs = new ArrayList<>();
+	public static void log(String msg) {
+		Logger logger = MainScript.instance().logger;
+		if(logger != null) {
+			while(!queuedMsgs.isEmpty()) {
+				logger.debug(queuedMsgs.remove(queuedMsgs.size() - 1));
+			}
+			logger.debug(msg);
+		}else {
+			queuedMsgs.add(0, msg);
+		}
 	}
 }

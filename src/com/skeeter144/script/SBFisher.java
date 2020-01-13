@@ -16,8 +16,7 @@ import com.skeeter144.sleep.Sleep;
 public class SBFisher extends SkeeterScript {
 
 	public SBFisher(MethodProvider m) {
-		super(m);
-		name = "Skeeter's Fish n' Cook";
+		super("Skeeter's Fish n' Cook", m);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -3,38 +3,53 @@ package com.skeeter144.gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JTextField;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 
+import com.skeeter144.data.MonsterData;
 import com.skeeter144.main.MainScript;
 import com.skeeter144.script.SBKiller;
 
 public class SBKillerGui extends JFrame{
 	
 	private static final long serialVersionUID = -1575479407796704136L;
-	JTextField targetTf;
-	JTextField targetItemsTf;
+	
 	JCheckBox ironManCb;
-	JButton startBtn;
+	JCheckBox lootItemsCb;
 	JCheckBox buryBonesCb;
 	JComboBox<String> monsterListCb;
+	JLabel dropTableLbl;
+	JLabel lootedItemsLbl;
+	
+	JList<String> dropTableList;
+	JList<String> itemsToLootList;
+	
+	JButton startBtn;
+	JButton homeBtn;
+	JButton refreshEntitiesBtn;
+	JButton loadDropsBtn;
+	JButton addDropBtn;
+	JButton removeDropBtn;
 	
 	SBKiller script;
-	
-	String searchText = "";
-	private JButton homeBtn;
-	private JButton refreshEntitiesBtn;
-	private JButton loadDropsBtn;
+	Map<String, Integer> monsterIds = new HashMap<>();
 	
 	public SBKillerGui(SBKiller script) {
+		setTitle("Skeeter's Loot N Bones");
 		this.setSize(590, 331);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
@@ -42,46 +57,26 @@ public class SBKillerGui extends JFrame{
 		
 		getContentPane().setLayout(null);
 		
-		targetTf = new JTextField();
-		targetTf.setBounds(160, 16, 116, 22);
-		getContentPane().add(targetTf);
-		targetTf.setColumns(10);
-		targetTf.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {}
-			public void keyReleased(KeyEvent e) {}
-			public void keyPressed(KeyEvent e) {
-				searchText = targetTf.getText();
-				script.getMethodProvider().logger.debug(searchText);
-			}
-		});
-		
 		JLabel targetLbl = new JLabel("Target:");
-		targetLbl.setBounds(12, 16, 56, 16);
+		targetLbl.setBounds(12, 19, 56, 16);
 		getContentPane().add(targetLbl);
 		
-		targetItemsTf = new JTextField();
-		targetItemsTf.setBounds(160, 45, 116, 22);
-		getContentPane().add(targetItemsTf);
-		targetItemsTf.setColumns(10);
-		
-		JLabel targetItemsLbl = new JLabel("Target Items:");
-		targetItemsLbl.setBounds(12, 45, 95, 16);
-		getContentPane().add(targetItemsLbl);
-		
 		buryBonesCb = new JCheckBox("Bury Bones");
-		buryBonesCb.setBounds(12, 70, 113, 25);
+		buryBonesCb.setEnabled(false);
+		buryBonesCb.setBounds(12, 80, 101, 25);
 		getContentPane().add(buryBonesCb);
 		
-		ironManCb = new JCheckBox("Iron Man Mode");
-		ironManCb.setBounds(12, 95, 141, 25);
+		ironManCb = new JCheckBox("Iron Man");
+		ironManCb.setEnabled(false);
+		ironManCb.setBounds(12, 108, 101, 25);
 		getContentPane().add(ironManCb);
 		
 		startBtn = new JButton("Start");
-		startBtn.setBounds(415, 234, 150, 50);
+		startBtn.setBounds(449, 239, 116, 45);
 		getContentPane().add(startBtn);
 		
 		monsterListCb = new JComboBox<String>();
-		monsterListCb.setBounds(288, 17, 184, 20);
+		monsterListCb.setBounds(123, 17, 316, 20);
 		getContentPane().add(monsterListCb);
 		
 //		ImageIcon icon = new ImageIcon("/res/home.png");
@@ -111,15 +106,78 @@ public class SBKillerGui extends JFrame{
 		
 		refreshEntitiesBtn.setFont(new Font("Tahoma", Font.PLAIN, 11));
 //		refreshEntitiesBtn.setIcon(icon);
-		refreshEntitiesBtn.setBounds(482, 16, 82, 22);
+		refreshEntitiesBtn.setBounds(449, 16, 116, 22);
 		getContentPane().add(refreshEntitiesBtn);
 		
-		loadDropsBtn = new JButton("Load Drops");
-		loadDropsBtn.setBounds(286, 45, 128, 23);
-		getContentPane().add(loadDropsBtn);
-		monsterListCb.addActionListener(new ActionListener() {
+//		loadDropsBtn = new JButton("Load Drops");
+//		loadDropsBtn.setBounds(449, 39, 116, 23);
+//		getContentPane().add(loadDropsBtn);
+//		loadDropsBtn.addActionListener((evt) -> {
+//			loadDrops();
+//		});
+		
+		addDropBtn = new JButton(">");
+		addDropBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				targetTf.setText((String)monsterListCb.getSelectedItem());
+				List<String> selectedItems = dropTableList.getSelectedValuesList();
+				moveItemsBetweenPanels(selectedItems, dropTableList, itemsToLootList);
+			}
+		});
+		addDropBtn.setEnabled(false);
+		addDropBtn.setBounds(263, 162, 41, 23);
+		getContentPane().add(addDropBtn);
+		
+		removeDropBtn = new JButton("<");
+		removeDropBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				List<String> selectedItems = itemsToLootList.getSelectedValuesList();
+				moveItemsBetweenPanels(selectedItems, itemsToLootList, dropTableList);
+			}
+		});
+		removeDropBtn.setEnabled(false);
+		removeDropBtn.setBounds(263, 194, 41, 23);
+		getContentPane().add(removeDropBtn);
+		
+		lootItemsCb = new JCheckBox("Loot Items");
+		lootItemsCb.setBounds(12, 54, 97, 23);
+		getContentPane().add(lootItemsCb);
+		lootItemsCb.addActionListener((evt) -> {
+			updateLootGroup(lootItemsCb.isSelected());
+		});
+		
+		dropTableLbl = new JLabel("Drop Table");
+		dropTableLbl.setHorizontalAlignment(SwingConstants.CENTER);
+		dropTableLbl.setBounds(154, 69, 72, 14);
+		getContentPane().add(dropTableLbl);
+		
+		lootedItemsLbl = new JLabel("Items to Loot");
+		lootedItemsLbl.setHorizontalAlignment(SwingConstants.CENTER);
+		lootedItemsLbl.setBounds(342, 69, 72, 14);
+		getContentPane().add(lootedItemsLbl);
+		
+		JScrollPane leftScrollPane = new JScrollPane();
+		leftScrollPane.setBounds(123, 86, 130, 200);
+		getContentPane().add(leftScrollPane);
+		leftScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		
+		dropTableList = new JList<String>(new DefaultListModel<String>());
+		leftScrollPane.setViewportView(dropTableList);
+		
+		JScrollPane rightScrollPane = new JScrollPane();
+		rightScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		rightScrollPane.setBounds(314, 86, 130, 200);
+		getContentPane().add(rightScrollPane);
+		
+		itemsToLootList = new JList<>(new DefaultListModel<String>());
+		rightScrollPane.setViewportView(itemsToLootList);
+		monsterListCb.addActionListener(new ActionListener() {
+			String lastSelection = "";
+
+			public void actionPerformed(ActionEvent e) {
+				if (monsterListCb.getSelectedItem() != null && !monsterListCb.getSelectedItem().equals(lastSelection)) {
+					lastSelection = (String)monsterListCb.getSelectedItem();
+					loadDrops();
+				}
 			}
 		});
 		
@@ -138,6 +196,48 @@ public class SBKillerGui extends JFrame{
 		updateMonsterCb();
 	}
 	
+	void moveItemsBetweenPanels(List<String> items, JList<String> from, JList<String> to) {
+		DefaultListModel<String> fromModel = (DefaultListModel<String>) from.getModel();
+		DefaultListModel<String> toModel = (DefaultListModel<String>) to.getModel();
+		
+		for(String s : items) {
+			toModel.addElement(s);
+			fromModel.removeElement(s);
+		}
+	}
+	
+	void loadDrops() {
+		DefaultListModel<String> model = (DefaultListModel<String>) dropTableList.getModel();
+		model.removeAllElements();
+		
+		int id = monsterIds.get((String)monsterListCb.getSelectedItem());
+		List<String> drops = MonsterData.lookupMonsterDrops(id);
+		for(String s : drops) {
+			if(!model.contains(s))
+				model.addElement(s);
+		}
+	}
+	
+	void updateLootGroup(boolean enabled) {
+		ironManCb.setEnabled(enabled);
+		buryBonesCb.setEnabled(enabled);
+		dropTableList.setEnabled(enabled);
+		itemsToLootList.setEnabled(enabled);
+		lootedItemsLbl.setEnabled(enabled);
+		dropTableLbl.setEnabled(enabled);
+		addDropBtn.setEnabled(enabled);
+		removeDropBtn.setEnabled(enabled);
+	}
+	
+	List<String> getLootedDrops(){
+		List<String> list = new ArrayList<>(itemsToLootList.getModel().getSize());
+		for (int i = 0; i < itemsToLootList.getModel().getSize(); i++) {
+		    list.add(itemsToLootList.getModel().getElementAt(i));
+		}
+		
+		return list;
+	}
+	
 	void updateMonsterCb() {
 		HashSet<String> monsterNames = new HashSet<String>();
 		script.getMethodProvider().npcs.getAll().forEach(
@@ -145,6 +245,7 @@ public class SBKillerGui extends JFrame{
 					if(item.getName() != null && !item.getName().equalsIgnoreCase("null") 
 							&& item.hasAction("Attack")) { 
 						monsterNames.add(item.getName());
+						monsterIds.put(item.getName(), item.getId());
 					}
 				});
 
@@ -154,13 +255,14 @@ public class SBKillerGui extends JFrame{
 	}
 	
 	void startBot() {
-		script.targetName = targetTf.getText();
-		script.setTargetItems(targetItemsTf.getText());
+		script.targetName = (String)monsterListCb.getSelectedItem();
 		script.buryBones = buryBonesCb.isSelected();
+		script.setTargetItems(getLootedDrops());
 		script.running = true;
 		
 		this.setVisible(false);
 	}
+	
 	
 	void pauseBot() {
 		script.running = false;

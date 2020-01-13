@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,24 +18,28 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.skeeter144.main.MainScript;
 import com.skeeter144.util.Util;
 
 public class MonsterData {
 	
 	private static JsonObject monsters = null;
 	
-	public static List<String> lookupMonsterDrops(NPC monster){
-		if(monsters == null) return new ArrayList<>();
+	public static List<String> lookupMonsterDrops(int monsterId){
+		if(monsters == null) {
+			MainScript.instance().logger.debug("no monsters loaded");
+			return new ArrayList<>();
+		}
 		
 		List<String> monsterDrops = new ArrayList<String>();
-		JsonElement monsterElement = monsters.get(Integer.toString(monster.getId()));
+		JsonElement monsterElement = monsters.get(Integer.toString(monsterId));
 		if (monsterElement != null && monsterElement.isJsonObject()) {
 			JsonObject dropsObject = monsterElement.getAsJsonObject();
 			JsonArray drops = dropsObject.get("drops").getAsJsonArray();
 			drops.forEach((drop) -> {
 				String dropName = drop.getAsJsonObject().get("name").getAsString();
 				boolean membersItem = drop.getAsJsonObject().get("members").getAsBoolean();
-
+				MainScript.instance().logger.debug("drop parsed :" + dropName);
 				if (membersItem)
 					dropName += "*";
 				
@@ -58,6 +63,10 @@ public class MonsterData {
 		return monsterDrops;
 	}
 	
+	public static List<String> lookupMonsterDrops(NPC monster){
+		return lookupMonsterDrops(monster.getId());
+	}
+	
 	
 	public static void loadMonsterDrops(){ loadMonsterDrops(null); }
 	
@@ -65,8 +74,11 @@ public class MonsterData {
 		Thread t = new Thread(() ->  {
 			try {
 				String json = downloadMonstersFile();
-				if(json.isEmpty()) return;
-				
+				if(json.isEmpty()) {
+					Util.log("No monster data loaded");
+					return;
+				}
+				Util.log("got some shit");
 				JsonParser parser = new JsonParser();
 				monsters = parser.parse(json).getAsJsonObject();
 			} catch (IOException e) {
@@ -80,7 +92,7 @@ public class MonsterData {
 	
 	private static String downloadMonstersFile() throws IOException {
 		File monstersFile = new File(Util.OSBotDataDir() + "/" + "monsters-complete.json");
-		if(monstersFile.exists()) return "";
+		if(monstersFile.exists()) return new String(Files.readAllBytes(monstersFile.toPath()));
 		
 		String url = "https://www.osrsbox.com/osrsbox-db/monsters-complete.json";
 		FileWriter fw = new FileWriter(monstersFile);
