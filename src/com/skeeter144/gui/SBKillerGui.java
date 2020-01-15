@@ -62,12 +62,10 @@ public class SBKillerGui extends JFrame{
 		getContentPane().add(targetLbl);
 		
 		buryBonesCb = new JCheckBox("Bury Bones");
-		buryBonesCb.setEnabled(false);
 		buryBonesCb.setBounds(12, 80, 101, 25);
 		getContentPane().add(buryBonesCb);
 		
 		ironManCb = new JCheckBox("Iron Man");
-		ironManCb.setEnabled(false);
 		ironManCb.setBounds(12, 108, 101, 25);
 		getContentPane().add(ironManCb);
 		
@@ -123,8 +121,7 @@ public class SBKillerGui extends JFrame{
 				moveItemsBetweenPanels(selectedItems, dropTableList, itemsToLootList);
 			}
 		});
-		addDropBtn.setEnabled(false);
-		addDropBtn.setBounds(263, 162, 41, 23);
+		addDropBtn.setBounds(261, 188, 41, 23);
 		getContentPane().add(addDropBtn);
 		
 		removeDropBtn = new JButton("<");
@@ -134,11 +131,11 @@ public class SBKillerGui extends JFrame{
 				moveItemsBetweenPanels(selectedItems, itemsToLootList, dropTableList);
 			}
 		});
-		removeDropBtn.setEnabled(false);
-		removeDropBtn.setBounds(263, 194, 41, 23);
+		removeDropBtn.setBounds(261, 161, 41, 23);
 		getContentPane().add(removeDropBtn);
 		
 		lootItemsCb = new JCheckBox("Loot Items");
+		lootItemsCb.setSelected(true);
 		lootItemsCb.setBounds(12, 54, 97, 23);
 		getContentPane().add(lootItemsCb);
 		lootItemsCb.addActionListener((evt) -> {

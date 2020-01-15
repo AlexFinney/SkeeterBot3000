@@ -9,6 +9,7 @@ import org.osbot.rs07.script.MethodProvider;
 import org.osbot.utility.Logger;
 
 import com.skeeter144.sleep.Sleep;
+import com.skeeter144.util.Util;
 
 public abstract class SkeeterScript{
 
@@ -34,13 +35,20 @@ public abstract class SkeeterScript{
 	
 	public void onStart() {
 		Thread t = new Thread(() -> {
-			while(running) {
-				if(script.myPlayer().isMoving() || script.myPlayer().isAnimating()) 
-					lastAnimationTime = System.currentTimeMillis();
+			while(true) {
 				try {
+					if(script == null || script.myPlayer() == null) {
+						Thread.sleep(500);
+						continue;
+					}
+					
+					if(script.myPlayer().isMoving() || script.myPlayer().isAnimating()) 
+						lastAnimationTime = System.currentTimeMillis();
+					
 					Thread.sleep(100);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
+					Util.log(e.getLocalizedMessage());
 				}
 			}
 		});
@@ -50,6 +58,7 @@ public abstract class SkeeterScript{
 	public void onPaint(Graphics2D g) {}
 	
 	public long idleTime() {
+		Util.log((System.currentTimeMillis() - lastAnimationTime) + "");
 		return System.currentTimeMillis() - lastAnimationTime;
 	}
 	
@@ -88,6 +97,15 @@ public abstract class SkeeterScript{
 		return success;
 	}
 	
+	long lastAttackedTime = 0;
+	boolean isPlayerUnderAttack() {
+		if(script.myPlayer().isUnderAttack()) {
+			lastAttackedTime = System.currentTimeMillis();
+		}
+		
+		return (System.currentTimeMillis() - lastAttackedTime) < 3000;
+	}
+	
 	public enum State{
 		IDLE,
 		MINING,
@@ -112,7 +130,7 @@ public abstract class SkeeterScript{
 		MINE_ORE,
 		INTERACT_FURNACE,
 		INTERACT_ANVIL,
-		ATTACK_MONSTER,
+		ATTACK_TARGET,
 		PICK_UP_ITEMS,
 		CHOP_TREE,
 		FISH_SPOT,
@@ -121,6 +139,7 @@ public abstract class SkeeterScript{
 		TAKE_ITEMS_FROM_BANK,
 		OPEN_BANK,
 		COOK_FOOD,
+		BURY_BONES,
 		BUY_ITEMS,
 		SELL_ITEMS,
 		TRAVEL

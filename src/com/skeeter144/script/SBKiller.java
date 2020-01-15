@@ -10,11 +10,11 @@ import java.util.List;
 import org.osbot.rs07.api.Inventory;
 import org.osbot.rs07.api.filter.Filter;
 import org.osbot.rs07.api.map.Position;
-import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.model.GroundItem;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.api.model.Player;
 import org.osbot.rs07.api.ui.Message;
+import org.osbot.rs07.api.ui.Tab;
 import org.osbot.rs07.input.keyboard.BotKeyListener;
 import org.osbot.rs07.listener.MessageListener;
 import org.osbot.rs07.script.MethodProvider;
@@ -22,6 +22,7 @@ import org.osbot.rs07.script.MethodProvider;
 import com.skeeter144.gui.SBKillerGui;
 import com.skeeter144.main.MainScript;
 import com.skeeter144.sleep.Sleep;
+import com.skeeter144.util.Util;
 
 public class SBKiller extends SkeeterScript implements MessageListener {
 
@@ -32,6 +33,10 @@ public class SBKiller extends SkeeterScript implements MessageListener {
 	public boolean running = false;
     public boolean buryBones = false;
     boolean buryingBones = false;
+    public boolean ironManMode = false;
+    public boolean lootItems = true;
+    
+    NPC currentTarget = null;
     
     HashMap<Position, Long> forgetPositions = new HashMap<Position, Long>();
     HashMap<Position, Long> killPositions = new HashMap<Position, Long>();
@@ -53,74 +58,83 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     	gui.setVisible(true);
     }
 
-    @Override
-    public void onMessage(Message msg) throws InterruptedException {
-    	if(msg.getMessage().contains("Iron Man")) {
-    		forgetPositions.put(script.myPosition(), System.currentTimeMillis());
-    	}
-    }
+	@Override
+	public Action nextAction() {
+		if(!isRunning()) return Action.NONE;
 
-    @SuppressWarnings("unchecked")
+    	Player player = script.myPlayer();
+    	Inventory inv = script.getInventory();
+		
+    	if(player.isUnderAttack()) return Action.ATTACK_TARGET;
+    	
+    	if(buryBones && (buryingBones || inv.isFull()) && inv.contains("Bones")) return Action.BURY_BONES;
+    	
+    	if(lootItems && !targetItems.isEmpty()) {
+	    	GroundItem targetItem = getTargetItem();
+	    	if(!inv.isFull() && targetItem != null && targetItem.getPosition().distance(player.getPosition()) < 5) {
+	    		return Action.PICK_UP_ITEMS;
+	    	}
+    	}
+    	
+    	NPC target = getTarget();
+    	if (target != null) {
+    		currentTarget = target;
+    		return Action.ATTACK_TARGET;
+    	}
+    	
+		return Action.NONE;
+	}
+    
 	@Override
     public int onLoop() {
     	if(!isRunning()) return 1000;
     	
-    	Player player = script.myPlayer();
-    	Inventory inventory = script.inventory;
+    	Inventory inv = script.getInventory();
     	
-    	if(player.isUnderAttack())
-    		return random(2000, 3000);
-    	
-    	
-    	int sleep = 0;
-    	if((sleep = buryBones()) > 0) return sleep;
-    	
-    	
-    	forgetPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
-    	killPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
-    	
-		Entity target = script.getNpcs().closest(new Filter<NPC>() {
-			public boolean match(NPC e) {
-				return e.getName().contains(targetName) && !e.isUnderAttack() && e.isAttackable() && e.getHealthPercent() == 100;
-			}
-    	});
-    	
-    	GroundItem targetItem = script.getGroundItems().closest(new Filter<GroundItem>() {
-			public boolean match(GroundItem i) {
-				return targetItems.contains(i.getName()) 
-						&& (!MainScript.instance().ironManMode || !forgetPositions.containsKey(i.getPosition())
-											&& killPositions.containsKey(i.getPosition()));
-			}
-    	});
-    	
-    	if(!inventory.isFull() && targetItem != null && targetItem.getPosition().distance(player.getPosition()) < 5)
-    	{
-    		targetItem.interact("Take");
-    		Sleep.sleepUntil(() -> !targetItem.exists(), 5000);
-    		return random(500, 1200);
+    	if(ironManMode) {
+	    	forgetPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
+	    	killPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
     	}
     	
-    	if (target != null && target.interact("Attack")) {
-			Sleep.sleepUntil(() -> ((NPC)target).getHealthPercent() == 0, 15000);
-			
-			if(((NPC)target).getHealthPercent() == 0 || !target.exists())
-				killPositions.put(target.getPosition(), System.currentTimeMillis());
-			
-			return random(500, 2000);
-		}
+    	currentAction = nextAction();
     	
-//    	if(closest == bones) {
-//    		if(bones.interact("Take")) {
-//    			Sleep.sleepUntil(() -> !player.isMoving() || !bones.exists(), 5000);
-//    			return random(50, 150);
-//    		}
-//    	}
+    	switch(currentAction) {
+    		case BURY_BONES:
+    			buryBones();
+    			break;
+    		case PICK_UP_ITEMS:
+    			GroundItem targetItem = getTargetItem();
+    			if(!inv.isFull() && targetItem != null && targetItem.interact("Take"))
+    				Sleep.sleepUntil(() -> !targetItem.exists(), 5000);
+    			break;
+    		case ATTACK_TARGET:
+    			if(isPlayerUnderAttack() || idleTime() < 3000) break;
+    			
+    			NPC target = getTarget();
+    			if (target != null && target.interact("Attack")) {
+    				Sleep.sleepUntil(() -> ((NPC)target).getHealthPercent() == 0, 15000);
+    				
+    				if(((NPC)target).getHealthPercent() == 0 || !target.exists()) {
+    					if(ironManMode) killPositions.put(target.getPosition(), System.currentTimeMillis());
+    					currentTarget  = null;
+    				}
+    			}
+    			break;
+    		case NONE:
+    			break;
+    		default:
+    			Util.log("Unimplemented action: " + currentAction);
+    	}
     	
     	return 1000;
     }
     
-    private int buryBones() {
+    void buryBones() {
     	Inventory inv = script.getInventory();
+    	if(!script.getTabs().isOpen(Tab.INVENTORY)) {
+    		script.getTabs().open(Tab.INVENTORY);
+    		return;
+    	}
     	
     	if(inv.isFull() && inv.contains("Bones")) {
     		buryingBones = true;
@@ -129,14 +143,34 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     	if(buryingBones && buryBones) {
     		if(inv.contains("Bones")) {
     			inv.interact("Bury", "Bones");
-    			return random(1100, 1400);
     		}else {
     			buryingBones = false;
     		}
     	}
-    	return 0;
     }
 
+    @SuppressWarnings("unchecked")
+    NPC getTarget() {
+    	return script.getNpcs().closest(new Filter<NPC>() {
+			public boolean match(NPC e) {
+				return e.getName().contains(targetName) && !e.isUnderAttack() && e.isAttackable() && e.getHealthPercent() == 100;
+			}
+    	});
+    }
+    
+    @SuppressWarnings("unchecked")
+    GroundItem getTargetItem() {
+    	if(targetItems.isEmpty()) return null;
+    	
+    	return script.getGroundItems().closest(new Filter<GroundItem>() {
+			public boolean match(GroundItem i) {
+				return targetItems.contains(i.getName()) 
+						&& (!MainScript.instance().ironManMode || !forgetPositions.containsKey(i.getPosition())
+											&& killPositions.containsKey(i.getPosition()));
+			}
+    	});
+    }
+    
     @Override
     public void onPaint(Graphics2D g) {
 
@@ -157,15 +191,13 @@ public class SBKiller extends SkeeterScript implements MessageListener {
 
 	@Override
 	public State getState() {
-		// TODO Auto-generated method stub
-		return null;
+		return currentState;
 	}
-
-	@Override
-	public Action nextAction() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
+    @Override
+    public void onMessage(Message msg) throws InterruptedException {
+    	if(msg.getMessage().contains("Iron Man")) {
+    		forgetPositions.put(script.myPosition(), System.currentTimeMillis());
+    	}
+    }
 }
-
-
