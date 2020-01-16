@@ -32,44 +32,6 @@ public class SBPizzaBaser extends SkeeterScript{
 	}
 
 	@Override
-	public int onLoop() throws InterruptedException {
-		Bank bank = script.getBank();
-		//Inventory inv = script.getInventory();
-		
-		Action a = nextAction();
-		switch(a) {
-			case OPEN_BANK:
-				openBank();
-				break;
-			case TAKE_ITEMS_FROM_BANK:
-				takeSuppliesFromBank();
-				break;
-			case ASSEMBLE_ITEMS:
-				assembleItems();
-				break;
-			case BANK_ITEMS:
-				openBank();
-				bank.depositAll();
-				break;
-			case SELL_ITEMS:
-				//sellProducts();
-				break;
-			case BUY_ITEMS:
-//				openBank();
-//				if(!inv.contains("Coins")) {
-//					bank.withdrawAll("Coins");	
-//					break;
-//				}
-//				buySupplies();
-				break;
-			default:
-				Util.log("Unimplemented action: " + a);
-		}
-		
-		return 1000;
-	}
-
-	@Override
 	public State getState() {
 		return null;
 	}
@@ -379,5 +341,42 @@ public class SBPizzaBaser extends SkeeterScript{
 	
 	boolean isGEOpen() {
 		return script.getWidgets().isVisible(465);
+	}
+
+	@Override
+	public int executeAction(Action action) throws InterruptedException {
+		Bank bank = script.getBank();
+		
+		Action a = nextAction();
+		switch(a) {
+			case OPEN_BANK:
+				openBank();
+				break;
+			case TAKE_ITEMS_FROM_BANK:
+				takeSuppliesFromBank();
+				break;
+			case ASSEMBLE_ITEMS:
+				assembleItems();
+				break;
+			case BANK_ITEMS:
+				openBank();
+				bank.depositAll();
+				break;
+			case SELL_ITEMS:
+				//sellProducts();
+				break;
+			case BUY_ITEMS:
+//				openBank();
+//				if(!inv.contains("Coins")) {
+//					bank.withdrawAll("Coins");	
+//					break;
+//				}
+//				buySupplies();
+				break;
+			default:
+				Util.log("Unimplemented action: " + a);
+		}
+		
+		return 1000;
 	}
 }

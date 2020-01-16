@@ -20,37 +20,6 @@ public class SBCooker_AlKharid extends SkeeterScript{
 		super("Skeeter's Al Kharid Cooker", m);
 	}
 
-	@Override
-	public int onLoop() throws InterruptedException {
-		Action a = nextAction();
-		Bank bank = script.getBank();
-		
-		switch(a) {
-			case TRAVEL:
-				if(bank.isOpen() && !bank.contains(cookItem)) script.getWalking().webWalk(Banks.GRAND_EXCHANGE);
-				if(idleTime() > 5000) script.getWalking().webWalk(Banks.AL_KHARID);
-				break;
-			case OPEN_BANK:
-				openBank();
-				break;
-			case BANK_ITEMS:
-				openBank();
-				bank.depositAll();
-				break;
-			case TAKE_ITEMS_FROM_BANK:
-				getFoodFromBank();
-				break;
-			case COOK_FOOD:
-				cookFood();
-				break;
-			case NONE: 
-				break;
-			default:
-				Util.log("Unimplemented action: " + a);
-		}
-		
-		return 1000;
-	}
 
 	@Override
 	public State getState() {
@@ -135,6 +104,39 @@ public class SBCooker_AlKharid extends SkeeterScript{
 				return;
 			}
 		}
+	}
+
+
+	@Override
+	public int executeAction(Action action) throws InterruptedException {
+		Action a = nextAction();
+		Bank bank = script.getBank();
+		
+		switch(a) {
+			case TRAVEL:
+				if(bank.isOpen() && !bank.contains(cookItem)) script.getWalking().webWalk(Banks.GRAND_EXCHANGE);
+				if(idleTime() > 5000) script.getWalking().webWalk(Banks.AL_KHARID);
+				break;
+			case OPEN_BANK:
+				openBank();
+				break;
+			case BANK_ITEMS:
+				openBank();
+				bank.depositAll();
+				break;
+			case TAKE_ITEMS_FROM_BANK:
+				getFoodFromBank();
+				break;
+			case COOK_FOOD:
+				cookFood();
+				break;
+			case NONE: 
+				break;
+			default:
+				Util.log("Unimplemented action: " + a);
+		}
+		
+		return 1000;
 	}
 	
 }

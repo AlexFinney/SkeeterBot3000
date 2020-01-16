@@ -5,6 +5,10 @@ import java.awt.Graphics2D;
 import javax.swing.JFrame;
 
 import org.osbot.rs07.api.Bank;
+import org.osbot.rs07.api.Inventory;
+import org.osbot.rs07.api.map.Position;
+import org.osbot.rs07.api.model.Player;
+import org.osbot.rs07.event.WebWalkEvent;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.utility.Logger;
 
@@ -17,10 +21,16 @@ public abstract class SkeeterScript{
 	protected State lastState = State.IDLE;
 	protected State currentState = State.IDLE;
 	protected Action currentAction = Action.NONE;
+	protected Action lastAction = Action.NONE;
 	protected MethodProvider script;
 	protected Logger logger;
 	public boolean running = false;
 	public String name;
+	
+	protected Player player;
+	protected Inventory inv;
+	protected Bank bank;
+	protected Position myPos;
 	
 	public JFrame gui;
 	
@@ -35,15 +45,21 @@ public abstract class SkeeterScript{
 	
 	public void onStart() {
 		Thread t = new Thread(() -> {
+			int lastRotation = -1;
 			while(true) {
 				try {
-					if(script == null || script.myPlayer() == null) {
+					if(script == null || player == null) {
 						Thread.sleep(500);
 						continue;
 					}
 					
-					if(script.myPlayer().isMoving() || script.myPlayer().isAnimating()) 
+					if(player.isMoving() || player.isAnimating() 
+							|| lastRotation != player.getRotation()) 
+					{
 						lastAnimationTime = System.currentTimeMillis();
+					}
+					
+					lastRotation = player.getRotation();
 					
 					Thread.sleep(100);
 				} catch (Exception e) {
@@ -53,6 +69,7 @@ public abstract class SkeeterScript{
 			}
 		});
 		t.start();
+		
 	}
 	
 	public void onPaint(Graphics2D g) {}
@@ -62,9 +79,24 @@ public abstract class SkeeterScript{
 		return System.currentTimeMillis() - lastAnimationTime;
 	}
 	
-	public abstract int onLoop() throws InterruptedException;
+	public final int onLoop() throws InterruptedException{
+		player = script.myPlayer();
+		inv = script.getInventory();
+		myPos = script.myPosition();
+		bank = script.getBank();
+		
+		lastAction = currentAction;
+		currentAction = nextAction();
+		
+		int actionSleep = executeAction(currentAction);
+		
+		return actionSleep > 0 ? actionSleep : 1000;
+		
+	}
+	
 	public abstract State getState();
 	public abstract Action nextAction();
+	public abstract int executeAction(Action action) throws InterruptedException;
 	
 	public int random(int min, int max) {
 		return MethodProvider.random(min, max);

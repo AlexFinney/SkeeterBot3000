@@ -85,50 +85,6 @@ public class SBKiller extends SkeeterScript implements MessageListener {
 		return Action.NONE;
 	}
     
-	@Override
-    public int onLoop() {
-    	if(!isRunning()) return 1000;
-    	
-    	Inventory inv = script.getInventory();
-    	
-    	if(ironManMode) {
-	    	forgetPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
-	    	killPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
-    	}
-    	
-    	currentAction = nextAction();
-    	
-    	switch(currentAction) {
-    		case BURY_BONES:
-    			buryBones();
-    			break;
-    		case PICK_UP_ITEMS:
-    			GroundItem targetItem = getTargetItem();
-    			if(!inv.isFull() && targetItem != null && targetItem.interact("Take"))
-    				Sleep.sleepUntil(() -> !targetItem.exists(), 5000);
-    			break;
-    		case ATTACK_TARGET:
-    			if(isPlayerUnderAttack() || idleTime() < 3000) break;
-    			
-    			NPC target = getTarget();
-    			if (target != null && target.interact("Attack")) {
-    				Sleep.sleepUntil(() -> ((NPC)target).getHealthPercent() == 0, 15000);
-    				
-    				if(((NPC)target).getHealthPercent() == 0 || !target.exists()) {
-    					if(ironManMode) killPositions.put(target.getPosition(), System.currentTimeMillis());
-    					currentTarget  = null;
-    				}
-    			}
-    			break;
-    		case NONE:
-    			break;
-    		default:
-    			Util.log("Unimplemented action: " + currentAction);
-    	}
-    	
-    	return 1000;
-    }
-    
     void buryBones() {
     	Inventory inv = script.getInventory();
     	if(!script.getTabs().isOpen(Tab.INVENTORY)) {
@@ -200,4 +156,48 @@ public class SBKiller extends SkeeterScript implements MessageListener {
     		forgetPositions.put(script.myPosition(), System.currentTimeMillis());
     	}
     }
+
+	@Override
+	public int executeAction(Action action) {
+		if(!isRunning()) return 1000;
+    	
+    	Inventory inv = script.getInventory();
+    	
+    	if(ironManMode) {
+	    	forgetPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
+	    	killPositions.entrySet().removeIf((i) -> System.currentTimeMillis() - i.getValue() > 60 * 2 * 1000);
+    	}
+    	
+    	currentAction = nextAction();
+    	
+    	switch(currentAction) {
+    		case BURY_BONES:
+    			buryBones();
+    			break;
+    		case PICK_UP_ITEMS:
+    			GroundItem targetItem = getTargetItem();
+    			if(!inv.isFull() && targetItem != null && targetItem.interact("Take"))
+    				Sleep.sleepUntil(() -> !targetItem.exists(), 5000);
+    			break;
+    		case ATTACK_TARGET:
+    			if(isPlayerUnderAttack() || idleTime() < 3000) break;
+    			
+    			NPC target = getTarget();
+    			if (target != null && target.interact("Attack")) {
+    				Sleep.sleepUntil(() -> ((NPC)target).getHealthPercent() == 0, 15000);
+    				
+    				if(((NPC)target).getHealthPercent() == 0 || !target.exists()) {
+    					if(ironManMode) killPositions.put(target.getPosition(), System.currentTimeMillis());
+    					currentTarget  = null;
+    				}
+    			}
+    			break;
+    		case NONE:
+    			break;
+    		default:
+    			Util.log("Unimplemented action: " + currentAction);
+    	}
+    	
+    	return 1000;
+	}
 }

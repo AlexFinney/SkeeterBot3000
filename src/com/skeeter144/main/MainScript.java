@@ -23,6 +23,7 @@ import com.skeeter144.misc.Formatting;
 import com.skeeter144.script.SBCooker_AlKharid;
 import com.skeeter144.script.SBFisher;
 import com.skeeter144.script.SBKiller;
+import com.skeeter144.script.SBMiner;
 import com.skeeter144.script.SBPizzaBaser;
 import com.skeeter144.script.SkeeterScript;
 import com.skeeter144.script.SkeeterScript.State;
@@ -113,7 +114,6 @@ public class MainScript extends Script{
 		running = false;
 	}
 	
-	
 	@Override
 	public void onStart() throws InterruptedException {
 		super.onStart();
@@ -132,6 +132,7 @@ public class MainScript extends Script{
 		});
 		
 		scripts.add(new SBKiller(this));
+		scripts.add(new SBMiner(this));
 		scripts.add(new SBFisher(this));
 		scripts.add(new SBPizzaBaser(this));
 		scripts.add(new SBCooker_AlKharid(this));

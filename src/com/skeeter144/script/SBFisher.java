@@ -18,59 +18,6 @@ public class SBFisher extends SkeeterScript {
 	public SBFisher(MethodProvider m) {
 		super("Skeeter's Fish n' Cook", m);
 	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public int onLoop() throws InterruptedException {
-		Inventory inv = script.getInventory();
-		
-		currentAction = nextAction();
-
-		switch (currentAction) {
-			case FISH_SPOT:
-				fish(FishingType.FLY);
-				break;
-			case CHOP_TREE:
-				RS2Object tree = script.objects.closest(SBUIds.PLAIN_WOOD_TREES);
-				if(tree != null) {
-					if(inv.isFull())
-						inv.interact(27, "Drop");
-					
-					tree.interact("Chop down");
-				}
-				break;
-			case LIGHT_FIRE:
-				if(inv.contains("Tinderbox")) {
-					if(inv.isItemSelected())
-						inv.deselectItem();
-					
-					inv.interact(inv.getSlot("Tinderbox"), "Use");
-					sleep(random(100, 500));
-					inv.interact("Use", "Logs");
-				}
-				break;
-			case COOK_FOOD:
-				RS2Widget cookWindow = script.getWidgets().get(270, 14);
-				if(cookWindow != null && cookWindow.isVisible()) {
-					cookWindow.interact("Cook All");
-					Sleep.sleepUntil(() -> idleTime() > 3 || !inv.contains(SBUFilters.UNCOOKED_FISH), 30000);
-				}
-				
-				RS2Object fire = script.objects.closest("Fire");
-				if(fire != null && fire.getPosition().distance(script.myPosition()) < 5) {
-					inv.interact(inv.getSlot(SBUFilters.UNCOOKED_FISH), "Use");
-					sleep(random(100, 500));
-					fire.interact();
-				}
-			default:
-				break;
-		}
-		
-		return 2000;
-	}
-
-	
-	
 	
 	@Override
 	public State getState() {
@@ -142,5 +89,54 @@ public class SBFisher extends SkeeterScript {
 		FLY,
 		HARPOON,
 		CAGE
+	}
+
+	@Override
+	public int executeAction(Action action) throws InterruptedException {
+		Inventory inv = script.getInventory();
+		
+		currentAction = nextAction();
+
+		switch (currentAction) {
+			case FISH_SPOT:
+				fish(FishingType.FLY);
+				break;
+			case CHOP_TREE:
+				RS2Object tree = script.objects.closest(SBUIds.PLAIN_WOOD_TREES);
+				if(tree != null) {
+					if(inv.isFull())
+						inv.interact(27, "Drop");
+					
+					tree.interact("Chop down");
+				}
+				break;
+			case LIGHT_FIRE:
+				if(inv.contains("Tinderbox")) {
+					if(inv.isItemSelected())
+						inv.deselectItem();
+					
+					inv.interact(inv.getSlot("Tinderbox"), "Use");
+					sleep(random(100, 500));
+					inv.interact("Use", "Logs");
+				}
+				break;
+			case COOK_FOOD:
+				RS2Widget cookWindow = script.getWidgets().get(270, 14);
+				if(cookWindow != null && cookWindow.isVisible()) {
+					cookWindow.interact("Cook All");
+					Sleep.sleepUntil(() -> idleTime() > 3 || !inv.contains(SBUFilters.UNCOOKED_FISH), 30000);
+				}
+				
+				RS2Object fire = script.objects.closest("Fire");
+				if(fire != null && fire.getPosition().distance(script.myPosition()) < 5) {
+					inv.interact(inv.getSlot(SBUFilters.UNCOOKED_FISH), "Use");
+					sleep(random(100, 500));
+					fire.interact();
+				}
+			default:
+				break;
+		}
+		
+		return 2000;
 	}
 }
