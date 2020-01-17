@@ -1,12 +1,21 @@
 package com.skeeter144.script;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.osbot.rs07.api.map.Area;
+import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.RS2Object;
 import org.osbot.rs07.event.WebWalkEvent;
-import org.osbot.rs07.event.webwalk.PathPreferenceProfile;
-import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 
+import com.skeeter144.sleep.Sleep;
 import com.skeeter144.util.Rock;
 import com.skeeter144.util.Util;
 
@@ -18,13 +27,11 @@ public class SBMiner extends SkeeterScript{
 	
 	String minedOreName = "Iron ore";
 	
-	public SBMiner(MethodProvider m) {
-		super("Skeeter's Miner", m);
-	}
-
-	@Override
-	public State getState() {
-		return currentState;
+	HashMap<Position, Boolean> veinPositions = new HashMap<>();
+	Position targetOrePos = null;
+	
+	public SBMiner(Script script) {
+		super("Skeeter's Miner", script);
 	}
 
 	@Override
@@ -32,7 +39,7 @@ public class SBMiner extends SkeeterScript{
 		
 		if(inv.isFull()) return Action.BANK_ITEMS;
 		
-		if(idleTime() < 2000) return currentAction;
+		if(idleTime() < 1000) return currentAction;
 		
 		if(!miningArea.area.contains(player.getPosition())) return Action.TRAVEL;
 		
@@ -44,6 +51,8 @@ public class SBMiner extends SkeeterScript{
 	public int executeAction(Action action) throws InterruptedException {
 		currentAction = nextAction();
 	
+		examineRocks();
+		
 		switch (currentAction) {
 			case TRAVEL:
 				Area dest = getTravelDestination();
@@ -89,9 +98,61 @@ public class SBMiner extends SkeeterScript{
 				break;
 		}
 		
-		return 1000;
+		return 500;
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void mine() throws InterruptedException {
+		examineRocks();
+		
+		if(targetOrePos != null && veinPositions.get(targetOrePos) && idleTime() < 1000) return; 
+		
+		
+		RS2Object ore = script.getObjects().closest(obj -> targetRockType.hasOre(obj));
+
+		if(ore == null) {
+			Util.log("Unable to find ore.  What up");
+			return;
+		}
+		
+		targetOrePos = ore.getPosition();
+		ore.interact("Mine");
+		Sleep.sleepUntil(() -> player.isMoving(), 2000);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void examineRocks() {
+		
+		List<Position> orePositions = new ArrayList<>();
+		script.getObjects().filter(obj -> targetRockType.hasOre(obj)).forEach((x) -> orePositions.add(x.getPosition()));
+		
+		
+		for(Position pos : orePositions) {
+			veinPositions.put(pos, true);
+		}
+		
+		for(Entry<Position, Boolean> entry : veinPositions.entrySet()) {
+			if(!orePositions.contains(entry.getKey()))
+				veinPositions.put(entry.getKey(), false);
+		}
+		
+	}
+	
+	@Override
+	public void onPaint(Graphics2D g) {
+		super.onPaint(g);
+
+		for (Entry<Position, Boolean> entry : veinPositions.entrySet()) {
+			
+			Util.log(script.myPosition() + " - " + entry.getKey());
+			if(entry.getValue()) 
+				Util.drawTile(script, g, entry.getKey(), Color.GREEN, Color.WHITE,  Util.walkingDistToPosition(script, entry.getKey()) + "");
+		}
+		
+		if(targetOrePos != null)
+			Util.drawTile(script, g, targetOrePos, Color.BLUE);
+	}
+
 	Area targetBank() {
 		return Banks.VARROCK_EAST;
 	}
@@ -101,21 +162,12 @@ public class SBMiner extends SkeeterScript{
 		
 		return MiningArea.VARROCK_EAST.area;
 	}
-
-	@SuppressWarnings("unchecked")
-	private void mine() throws InterruptedException {
-		if(idleTime() < 1000) return;
-		
-		RS2Object ore = script.getObjects().closest(obj -> targetRockType.hasOre(obj));;
-
-		if(ore == null) {
-			Util.log("Unable to find ore.  What up");
-			return;
-		}
-		
-		ore.interact("Mine");
-	}
 	
+	@Override
+	public State getState() {
+		return currentState;
+	}
+
 	
 	public enum MiningArea{
 		VARROCK_EAST(new Area(3281, 3361, 3289, 3370)),

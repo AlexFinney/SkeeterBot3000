@@ -10,7 +10,7 @@ import org.osbot.rs07.api.Inventory;
 import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.api.ui.Tab;
-import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 
 import com.skeeter144.sleep.Sleep;
 import com.skeeter144.util.Util;
@@ -27,8 +27,8 @@ public class SBPizzaBaser extends SkeeterScript{
 	
 	Map<String, Long> bankItemStock = new HashMap<>();
 	
-	public SBPizzaBaser(MethodProvider m) {
-		super("Skeeter's Pizza Base Maker", m);
+	public SBPizzaBaser(Script script) {
+		super("Skeeter's Pizza Base Maker", script);
 	}
 
 	@Override

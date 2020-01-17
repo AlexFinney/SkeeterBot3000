@@ -5,7 +5,7 @@ import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.api.model.Player;
 import org.osbot.rs07.api.model.RS2Object;
 import org.osbot.rs07.api.ui.RS2Widget;
-import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 
 import com.skeeter144.filter.SBUFilters;
 import com.skeeter144.id.InventoryIds;
@@ -15,8 +15,8 @@ import com.skeeter144.sleep.Sleep;
 
 public class SBFisher extends SkeeterScript {
 
-	public SBFisher(MethodProvider m) {
-		super("Skeeter's Fish n' Cook", m);
+	public SBFisher(Script script) {
+		super("Skeeter's Fish n' Cook", script);
 	}
 	
 	@Override

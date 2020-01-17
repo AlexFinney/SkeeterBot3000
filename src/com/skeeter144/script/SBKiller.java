@@ -17,7 +17,7 @@ import org.osbot.rs07.api.ui.Message;
 import org.osbot.rs07.api.ui.Tab;
 import org.osbot.rs07.input.keyboard.BotKeyListener;
 import org.osbot.rs07.listener.MessageListener;
-import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 
 import com.skeeter144.gui.SBKillerGui;
 import com.skeeter144.main.MainScript;
@@ -26,8 +26,8 @@ import com.skeeter144.util.Util;
 
 public class SBKiller extends SkeeterScript implements MessageListener {
 
-	public SBKiller(MethodProvider m) {
-		super("Skeeter's Killer + Loot 'n Bones", m);
+	public SBKiller(Script script) {
+		super("Skeeter's Killer + Loot 'n Bones", script);
 	}
 	
 	public boolean running = false;

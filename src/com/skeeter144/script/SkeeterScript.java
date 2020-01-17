@@ -8,8 +8,8 @@ import org.osbot.rs07.api.Bank;
 import org.osbot.rs07.api.Inventory;
 import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.Player;
-import org.osbot.rs07.event.WebWalkEvent;
 import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 import org.osbot.utility.Logger;
 
 import com.skeeter144.sleep.Sleep;
@@ -22,7 +22,7 @@ public abstract class SkeeterScript{
 	protected State currentState = State.IDLE;
 	protected Action currentAction = Action.NONE;
 	protected Action lastAction = Action.NONE;
-	protected MethodProvider script;
+	protected Script script;
 	protected Logger logger;
 	public boolean running = false;
 	public String name;
@@ -34,7 +34,7 @@ public abstract class SkeeterScript{
 	
 	public JFrame gui;
 	
-	public SkeeterScript(String name, MethodProvider m) {
+	public SkeeterScript(String name, Script m) {
 		script = m;
     	logger = Logger.GLOBAL_LOGGER;
     	this.name = name;

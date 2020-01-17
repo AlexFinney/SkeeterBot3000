@@ -5,7 +5,7 @@ import org.osbot.rs07.api.Inventory;
 import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.RS2Object;
-import org.osbot.rs07.script.MethodProvider;
+import org.osbot.rs07.script.Script;
 
 import com.skeeter144.sleep.Sleep;
 import com.skeeter144.util.Util;
@@ -16,8 +16,8 @@ public class SBCooker_AlKharid extends SkeeterScript{
 	
 	public String cookItem = "Uncooked pizza";
 	
-	public SBCooker_AlKharid(MethodProvider m) {
-		super("Skeeter's Al Kharid Cooker", m);
+	public SBCooker_AlKharid(Script script) {
+		super("Skeeter's Al Kharid Cooker", script);
 	}
 
 
